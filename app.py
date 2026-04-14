@@ -55,7 +55,7 @@ project_data = {
     "plot_area": plot_area,
     "road_width": road_width,
     "zone": zone,
-    "height": height
+    "height": height,
     "scheme": scheme
 }
 
