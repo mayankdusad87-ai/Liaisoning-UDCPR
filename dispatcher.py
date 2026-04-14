@@ -52,13 +52,21 @@ class QueryDispatcher:
         return f"Permissible built-up area = {bua} sqm"
 
     def rag_handler(self, query, project_data):
-        docs = self.rag.search(query)
+    docs = self.rag.search(query)
 
-        context = "\n".join(docs)
+    context = "\n\n".join(docs)
 
-        return self.groq.ask(
-            f"Use the following UDCPR clauses:\n{context}\n\nQuery: {query}"
-        )
+    prompt = f"""
+    Use only the following UDCPR clauses:
+
+    {context}
+
+    Answer the user query with clause references.
+
+    Query: {query}
+    """
+
+    return self.groq.ask(prompt)
 
     def process(self, query, project_data):
         route = self.router.route(query)
