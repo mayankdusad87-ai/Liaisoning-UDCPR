@@ -1,10 +1,11 @@
 from groq import Groq
-import os
+import streamlit as st
+
 
 class GroqClient:
 
     def __init__(self):
-        api_key = os.getenv("GROQ_API_KEY")
+        api_key = st.secrets["GROQ_API_KEY"]
         self.client = Groq(api_key=api_key)
 
     def ask(self, prompt):
@@ -13,7 +14,7 @@ class GroqClient:
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a UDCPR expert."
+                    "content": "You are an expert UDCPR compliance assistant."
                 },
                 {
                     "role": "user",
