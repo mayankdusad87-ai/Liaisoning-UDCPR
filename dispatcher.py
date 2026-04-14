@@ -18,7 +18,8 @@ class QueryDispatcher:
         if "fsi" in query:
             fsi = self.lookup.get_fsi(
                 project_data["zone"],
-                project_data["road_width"]
+                project_data["road_width"],
+                project_data["scheme"]
             )
             return f"Applicable FSI = {fsi}"
 
