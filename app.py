@@ -41,7 +41,7 @@ height = st.sidebar.number_input(
 )
 
 scheme = st.sidebar.selectbox(
-    "Scheme Type",
+    "Select Scheme Type",
     [
         "general_udcpr",
         "sra",
