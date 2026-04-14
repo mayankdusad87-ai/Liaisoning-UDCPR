@@ -9,7 +9,7 @@ class StructuredLookup:
 
     def get_fsi(self, zone, road_width, scheme="general_udcpr"):
         zone = zone.lower()
-        scheme = scheme.lower()
+        scheme = (scheme or "general_udcpr").lower()
 
         # scheme-based direct FSI
         if scheme in ["sra", "mhada", "pmay"]:
