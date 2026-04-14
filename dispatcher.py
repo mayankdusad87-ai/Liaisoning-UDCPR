@@ -15,21 +15,17 @@ class QueryDispatcher:
     def structured_lookup_handler(self, query, project_data):
         query = query.lower()
 
-        # FSI lookup
         if "fsi" in query:
             fsi = self.lookup.get_fsi(
                 project_data["zone"],
                 project_data["road_width"]
             )
-
             return f"Applicable FSI = {fsi}"
 
-        # setback lookup
         if "setback" in query:
             setback = self.lookup.get_setback(
                 project_data["height"]
             )
-
             return (
                 f"Required setbacks:\n"
                 f"Front = {setback['front']} m\n"
@@ -52,21 +48,21 @@ class QueryDispatcher:
         return f"Permissible built-up area = {bua} sqm"
 
     def rag_handler(self, query, project_data):
-    docs = self.rag.search(query)
+        docs = self.rag.search(query)
 
-    context = "\n\n".join(docs)
+        context = "\n\n".join(docs)
 
-    prompt = f"""
-    Use only the following UDCPR clauses:
+        prompt = f"""
+Use only the following UDCPR clauses:
 
-    {context}
+{context}
 
-    Answer the user query with clause references.
+Answer the user query with clause references.
 
-    Query: {query}
-    """
+Query: {query}
+"""
 
-    return self.groq.ask(prompt)
+        return self.groq.ask(prompt)
 
     def process(self, query, project_data):
         route = self.router.route(query)
