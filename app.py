@@ -40,11 +40,23 @@ height = st.sidebar.number_input(
     value=15.0
 )
 
+scheme = st.sidebar.selectbox(
+    "Scheme Type",
+    [
+        "general_udcpr",
+        "sra",
+        "mhada",
+        "pmay",
+        "gaothan"
+    ]
+)
+
 project_data = {
     "plot_area": plot_area,
     "road_width": road_width,
     "zone": zone,
     "height": height
+    "scheme": scheme
 }
 
 # -----------------------------
