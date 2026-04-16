@@ -3,7 +3,7 @@ import fitz
 class RAGEngine:
 
     def __init__(self):
-        self.pdf_path = "data/MUMBAI-DCPR.pdf"
+        self.pdf_path = "data/MUBAI-DCPR.pdf"
 
     def search(self, query):
         doc = fitz.open(self.pdf_path)
