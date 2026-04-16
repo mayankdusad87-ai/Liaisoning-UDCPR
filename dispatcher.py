@@ -15,6 +15,7 @@ class QueryDispatcher:
     def structured_lookup_handler(self, query, project_data):
         query = query.lower()
 
+        # FSI
         if "fsi" in query:
             fsi = self.lookup.get_fsi(
                 project_data["zone"],
@@ -23,6 +24,7 @@ class QueryDispatcher:
             )
             return f"Applicable FSI = {fsi}"
 
+        # SETBACK
         if "setback" in query:
             setback = self.lookup.get_setback(
                 project_data["height"]
@@ -34,14 +36,22 @@ class QueryDispatcher:
                 f"Rear = {setback['rear']} m"
             )
 
-        return "No structured rule found."
+        # PARKING ✅ NEW
+        if "parking" in query:
+            parking = self.lookup.get_parking(
+                project_data["zone"]
+            )
+            return f"Parking Norms: {parking}"
+
+        return self.rag_handler(query, project_data)
 
     def calculation_handler(self, query, project_data):
         plot_area = project_data["plot_area"]
 
         fsi = self.lookup.get_fsi(
             project_data["zone"],
-            project_data["road_width"]
+            project_data["road_width"],
+            project_data["scheme"]   # ✅ FIXED
         )
 
         bua = plot_area * fsi
@@ -54,11 +64,16 @@ class QueryDispatcher:
         context = "\n\n".join(docs)
 
         prompt = f"""
-Use only the following UDCPR clauses:
+Project Details:
+Zone: {project_data['zone']}
+Scheme: {project_data['scheme']}
+Road Width: {project_data['road_width']}
+Height: {project_data['height']}
 
+Use the following DCPR clauses:
 {context}
 
-Answer the user query with clause references.
+Answer the query with clause references.
 
 Query: {query}
 """
@@ -77,4 +92,4 @@ Query: {query}
         elif route == "rag_search":
             return self.rag_handler(query, project_data)
 
-        return "Unable to process query."
+        return self.rag_handler(query, project_data)  # ✅ fallback
