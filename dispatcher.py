@@ -3,6 +3,7 @@ from structured_lookup import StructuredLookup
 from groq_client import GroqClient
 from rag_engine import RAGEngine
 
+
 class QueryDispatcher:
 
     def __init__(self):
@@ -14,49 +15,63 @@ class QueryDispatcher:
     def process(self, query, data):
         route = self.router.route(query)
 
+        # -----------------------------------
+        # CALCULATION ENGINE
+        # -----------------------------------
         if route == "calculation":
-            fsi = self.lookup.calculate_fsi(data["plot_area"])
 
+            fsi = self.lookup.calculate_fsi(data["plot_area"])
             parking = self.lookup.parking(fsi["bua"])
             approvals = self.lookup.approvals(data["height"])
 
-            return f"""
-### 33(A)(10) Calculation
+            # 🔥 Combine with AI explanation
+            return self.groq.ask(
+                query=query,
+                project_data=data,
+                context=f"""
+Computed Data:
+Base FSI: {fsi['base']}
+Fungible: {fsi['fungible']}
+Total FSI: {fsi['total']}
+BUA: {fsi['bua']}
 
-- Base FSI: {fsi['base']}
-- Fungible: {fsi['fungible']}
-- Total FSI: {fsi['total']}
+Parking:
+ECS: {parking['ecs']}
+Visitor: {parking['visitor']}
+Total: {parking['total']}
 
-➡️ BUA: **{fsi['bua']} sqm**
-
-### Parking
-- ECS: {parking['ecs']}
-- Visitor: {parking['visitor']}
-- Total: {parking['total']}
-
-### Approvals
-{chr(10).join(['- ' + a for a in approvals])}
+Approvals:
+{chr(10).join(approvals)}
 """
+            )
 
+        # -----------------------------------
+        # STRUCTURED RULES (SMART)
+        # -----------------------------------
         if route == "rules":
-            return """
-### Key Rules (33(A)(10))
 
-- Base FSI: ~3.0
-- Fungible: up to 35%
-- TDR: Allowed subject to conditions
-- Parking: As per Table 8B
+            return self.groq.ask(
+                query=query,
+                project_data=data,
+                context="""
+Key 33(A)(10) Rules:
+- Base FSI ~3.0
+- Fungible up to 35%
+- TDR allowed with conditions
+- Parking governed by Table 8B
 """
+            )
 
-        # RAG + AI
+        # -----------------------------------
+        # RAG + AI (CORE INTELLIGENCE)
+        # -----------------------------------
         docs = self.rag.search(query)
 
-        prompt = f"""
-Context:
-{docs}
+        # Clean formatting
+        context = "\n\n".join(docs)
 
-Query:
-{query}
-"""
-
-        return self.groq.ask(prompt)
+        return self.groq.ask(
+            query=query,
+            project_data=data,
+            context=context
+        )
