@@ -40,15 +40,7 @@ height = st.sidebar.number_input(
     value=15.0
 )
 
-scheme = st.sidebar.selectbox(
-    "Select Scheme Type",
-    [
-        "general_udcpr",
-        "sra",
-        "mhada",
-        "pmay",
-        "gaothan"
-    ]
+regulation = "33(A)(10)"
 )
 
 project_data = {
