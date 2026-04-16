@@ -5,12 +5,12 @@ from agent import UDCPRAgent
 # Page Setup
 # -----------------------------
 st.set_page_config(
-    page_title="UDCPR AI Liaisoning Agent",
+    page_title="33(A)(10) Liaisoning Agent",
     layout="wide"
 )
 
-st.title("UDCPR 2034 Liaisoning Agent")
-st.write("AI assistant for FSI, setbacks, clauses and compliance.")
+st.title("Mumbai DCPR 33(A)(10) AI Agent")
+st.write("Specialized AI assistant for redevelopment compliance.")
 
 # -----------------------------
 # Sidebar Inputs
@@ -40,15 +40,18 @@ height = st.sidebar.number_input(
     value=15.0
 )
 
+# ✅ Fixed regulation (hardcoded)
 regulation = "33(A)(10)"
-)
 
+# -----------------------------
+# Project Data
+# -----------------------------
 project_data = {
     "plot_area": plot_area,
     "road_width": road_width,
     "zone": zone,
     "height": height,
-    "scheme": scheme
+    "regulation": regulation
 }
 
 # -----------------------------
@@ -65,6 +68,6 @@ if st.button("Submit Query"):
         response = agent.run(query, project_data)
 
         st.subheader("Response")
-        st.write(response)
+        st.markdown(response)  # ✅ better UI than st.write
     else:
         st.warning("Please enter your query.")
