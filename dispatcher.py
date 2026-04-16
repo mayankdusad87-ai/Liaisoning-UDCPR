@@ -3,7 +3,6 @@ from structured_lookup import StructuredLookup
 from groq_client import GroqClient
 from rag_engine import RAGEngine
 
-
 class QueryDispatcher:
 
     def __init__(self):
@@ -12,82 +11,52 @@ class QueryDispatcher:
         self.groq = GroqClient()
         self.rag = RAGEngine()
 
-    def structured_lookup_handler(self, query, project_data):
-        query = query.lower()
+    def process(self, query, data):
+        route = self.router.route(query)
 
-        if "fsi" in query:
-            fsi = self.lookup.get_fsi()
+        if route == "calculation":
+            fsi = self.lookup.calculate_fsi(data["plot_area"])
+
+            parking = self.lookup.parking(fsi["bua"])
+            approvals = self.lookup.approvals(data["height"])
+
             return f"""
-### Regulation 33(A)(10)
+### 33(A)(10) Calculation
 
 - Base FSI: {fsi['base']}
-- Fungible FSI: {fsi['fungible_percent']}%
-- Max FSI: {fsi['max_with_fungible']}
+- Fungible: {fsi['fungible']}
+- Total FSI: {fsi['total']}
+
+➡️ BUA: **{fsi['bua']} sqm**
+
+### Parking
+- ECS: {parking['ecs']}
+- Visitor: {parking['visitor']}
+- Total: {parking['total']}
+
+### Approvals
+{chr(10).join(['- ' + a for a in approvals])}
 """
 
-        if "parking" in query:
-            return f"""
-### Parking Norms
-{self.lookup.get_parking()}
+        if route == "rules":
+            return """
+### Key Rules (33(A)(10))
+
+- Base FSI: ~3.0
+- Fungible: up to 35%
+- TDR: Allowed subject to conditions
+- Parking: As per Table 8B
 """
 
-        if "setback" in query:
-            return f"""
-### Setbacks
-{self.lookup.get_setback()}
-"""
-
-        if "approval" in query or "noc" in query:
-            approvals = self.lookup.get_approvals()
-            return "### Required Approvals\n" + "\n".join(
-                [f"- {a}" for a in approvals]
-            )
-
-        return self.rag_handler(query, project_data)
-
-    def calculation_handler(self, query, project_data):
-        fsi = self.lookup.get_fsi()["base"]
-        bua = project_data["plot_area"] * fsi
-
-        return f"""
-### Calculation
-
-Plot Area: {project_data['plot_area']} sqm  
-FSI: {fsi}  
-
-➡️ Permissible BUA: **{bua} sqm**
-"""
-
-    def rag_handler(self, query, project_data):
+        # RAG + AI
         docs = self.rag.search(query)
 
-        context = "\n\n".join(docs)
-
         prompt = f"""
-Regulation: 33(A)(10)
+Context:
+{docs}
 
-Project:
-- Plot Area: {project_data['plot_area']}
-- Road Width: {project_data['road_width']}
-- Height: {project_data['height']}
-
-Use these clauses:
-{context}
-
-Answer clearly with compliance logic.
-
-Query: {query}
+Query:
+{query}
 """
 
         return self.groq.ask(prompt)
-
-    def process(self, query, project_data):
-        route = self.router.route(query)
-
-        if route == "structured_lookup":
-            return self.structured_lookup_handler(query, project_data)
-
-        elif route == "calculation":
-            return self.calculation_handler(query, project_data)
-
-        return self.rag_handler(query, project_data)
