@@ -3,10 +3,10 @@ class QueryRouter:
     def route(self, query):
         query = query.lower()
 
-        if any(word in query for word in ["calculate", "bua", "area"]):
+        if any(k in query for k in ["calculate", "area", "bua"]):
             return "calculation"
 
-        if any(word in query for word in ["fsi", "setback", "parking"]):
-            return "structured_lookup"
+        if any(k in query for k in ["fsi", "parking", "setback"]):
+            return "rules"
 
-        return "rag_search"
+        return "rag"
