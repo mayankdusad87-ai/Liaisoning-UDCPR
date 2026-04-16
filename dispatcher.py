@@ -15,48 +15,48 @@ class QueryDispatcher:
     def structured_lookup_handler(self, query, project_data):
         query = query.lower()
 
-        # FSI
         if "fsi" in query:
-            fsi = self.lookup.get_fsi(
-                project_data["zone"],
-                project_data["road_width"],
-                project_data["scheme"]
-            )
-            return f"Applicable FSI = {fsi}"
+            fsi = self.lookup.get_fsi()
+            return f"""
+### Regulation 33(A)(10)
 
-        # SETBACK
-        if "setback" in query:
-            setback = self.lookup.get_setback(
-                project_data["height"]
-            )
-            return (
-                f"Required setbacks:\n"
-                f"Front = {setback['front']} m\n"
-                f"Side = {setback['side']} m\n"
-                f"Rear = {setback['rear']} m"
-            )
+- Base FSI: {fsi['base']}
+- Fungible FSI: {fsi['fungible_percent']}%
+- Max FSI: {fsi['max_with_fungible']}
+"""
 
-        # PARKING ✅ NEW
         if "parking" in query:
-            parking = self.lookup.get_parking(
-                project_data["zone"]
+            return f"""
+### Parking Norms
+{self.lookup.get_parking()}
+"""
+
+        if "setback" in query:
+            return f"""
+### Setbacks
+{self.lookup.get_setback()}
+"""
+
+        if "approval" in query or "noc" in query:
+            approvals = self.lookup.get_approvals()
+            return "### Required Approvals\n" + "\n".join(
+                [f"- {a}" for a in approvals]
             )
-            return f"Parking Norms: {parking}"
 
         return self.rag_handler(query, project_data)
 
     def calculation_handler(self, query, project_data):
-        plot_area = project_data["plot_area"]
+        fsi = self.lookup.get_fsi()["base"]
+        bua = project_data["plot_area"] * fsi
 
-        fsi = self.lookup.get_fsi(
-            project_data["zone"],
-            project_data["road_width"],
-            project_data["scheme"]   # ✅ FIXED
-        )
+        return f"""
+### Calculation
 
-        bua = plot_area * fsi
+Plot Area: {project_data['plot_area']} sqm  
+FSI: {fsi}  
 
-        return f"Permissible built-up area = {bua} sqm"
+➡️ Permissible BUA: **{bua} sqm**
+"""
 
     def rag_handler(self, query, project_data):
         docs = self.rag.search(query)
@@ -64,16 +64,17 @@ class QueryDispatcher:
         context = "\n\n".join(docs)
 
         prompt = f"""
-Project Details:
-Zone: {project_data['zone']}
-Scheme: {project_data['scheme']}
-Road Width: {project_data['road_width']}
-Height: {project_data['height']}
+Regulation: 33(A)(10)
 
-Use the following DCPR clauses:
+Project:
+- Plot Area: {project_data['plot_area']}
+- Road Width: {project_data['road_width']}
+- Height: {project_data['height']}
+
+Use these clauses:
 {context}
 
-Answer the query with clause references.
+Answer clearly with compliance logic.
 
 Query: {query}
 """
@@ -89,7 +90,4 @@ Query: {query}
         elif route == "calculation":
             return self.calculation_handler(query, project_data)
 
-        elif route == "rag_search":
-            return self.rag_handler(query, project_data)
-
-        return self.rag_handler(query, project_data)  # ✅ fallback
+        return self.rag_handler(query, project_data)
