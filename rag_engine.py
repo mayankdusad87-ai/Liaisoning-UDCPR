@@ -4,7 +4,7 @@ import fitz
 class RAGEngine:
 
     def __init__(self):
-        self.pdf_path = "data/udcpr_2034.pdf"
+       self.pdf_path = "data/MUMBAI-DCPR.pdf"
 
     def search(self, query, top_k=3):
         doc = fitz.open(self.pdf_path)
