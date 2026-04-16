@@ -1,20 +1,40 @@
-import json
-
-
 class StructuredLookup:
 
     def __init__(self):
-        with open("data/structured_rules.json") as f:
-            self.rules = json.load(f)
+        self.base_fsi = 3.0
+        self.fungible_percent = 35
 
-    def get_fsi(self):
-        return self.rules["fsi"]
+    def calculate_fsi(self, plot_area):
+        base = self.base_fsi
+        fungible = base * (self.fungible_percent / 100)
 
-    def get_parking(self):
-        return self.rules["parking"]
+        total_fsi = base + fungible
+        bua = plot_area * total_fsi
 
-    def get_setback(self):
-        return self.rules["setbacks"]
+        return {
+            "base": base,
+            "fungible": fungible,
+            "total": total_fsi,
+            "bua": bua
+        }
 
-    def get_approvals(self):
-        return self.rules["approvals"]
+    def parking(self, bua):
+        # simplified ECS logic
+        ecs = bua / 100
+        visitor = ecs * 0.05
+
+        return {
+            "ecs": round(ecs),
+            "visitor": round(visitor),
+            "total": round(ecs + visitor)
+        }
+
+    def approvals(self, height):
+        approvals = []
+
+        if height > 24:
+            approvals.append("Fire NOC required")
+
+        approvals.append("Authority approval")
+
+        return approvals
