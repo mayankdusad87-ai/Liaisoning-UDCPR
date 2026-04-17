@@ -24,4 +24,4 @@ if st.button("Run"):
     agent = UDCPRAgent()
     result = agent.run(query, data)
 
-    st.markdown(result))
+    st.markdown(result)
