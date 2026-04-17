@@ -5,9 +5,22 @@ import streamlit as st
 class GroqClient:
 
     def __init__(self):
-        api_key = st.secrets["GROQ_API_KEY"]
+
+        # ✅ Get API Key properly
+        api_key = st.secrets.get("GROQ_API_KEY")
+
+        if not api_key:
+            raise ValueError("Missing GROQ API Key")
+
+        # ✅ Initialize client
         self.client = Groq(api_key=api_key)
 
+        # (Optional debug)
+        print("Groq initialized successfully")
+
+        # -----------------------------------
+        # SYSTEM PROMPT
+        # -----------------------------------
         self.system_prompt = """
 You are a senior Mumbai DCPR liaisoning consultant,
 specialized in Regulation 33(A)(10) redevelopment.
@@ -43,12 +56,16 @@ Strict Rules:
 - If data is insufficient → say "insufficient data for exact compliance"
 """
 
+    # -----------------------------------
+    # ASK FUNCTION
+    # -----------------------------------
     def ask(self, query, project_data=None, context=None):
 
         # -----------------------------
         # Project Context
         # -----------------------------
         project_info = ""
+
         if project_data:
             project_info = f"""
 Project Details:
@@ -61,8 +78,6 @@ Project Details:
         # -----------------------------
         # RAG Context
         # -----------------------------
-        rag_context = ""
-
         if context and len(context.strip()) > 50:
             rag_context = f"""
 Relevant DCPR Extract (USE THIS FIRST):
@@ -76,4 +91,28 @@ Use general 33(A)(10) knowledge.
 Clearly mention assumptions.
 """
 
-        #
+        # -----------------------------
+        # FINAL PROMPT
+        # -----------------------------
+        final_prompt = f"""
+{project_info}
+
+{rag_context}
+
+User Query:
+{query}
+"""
+
+        # -----------------------------
+        # GROQ CALL
+        # -----------------------------
+        response = self.client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": final_prompt}
+            ],
+            temperature=0.2
+        )
+
+        return response.choices[0].message.content
