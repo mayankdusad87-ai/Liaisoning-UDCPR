@@ -62,16 +62,17 @@ Key 33(A)(10) Rules:
 """
             )
 
-        # -----------------------------------
-        # RAG + AI (CORE INTELLIGENCE)
-        # -----------------------------------
-        docs = self.rag.search(query)
+       # -----------------------------------
+# RAG + AI (CORE INTELLIGENCE)
+# -----------------------------------
+docs = self.rag.search(query)
 
-        # Clean formatting
-        context = "\n\n".join(docs)
+# ✅ Fallback protection
+if not docs:
+    return self.groq.ask(
+        query=query,
+        project_data=data,
+        context="""
+No exact clause found in DCPR document.
 
-        return self.groq.ask(
-            query=query,
-            project_data=data,
-            context=context
-        )
+Answer
