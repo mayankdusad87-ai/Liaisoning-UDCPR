@@ -24,21 +24,22 @@ class QueryDispatcher:
             parking = self.lookup.parking(fsi["bua"])
             approvals = self.lookup.approvals(data["height"])
 
-            # 🔥 Combine with AI explanation
             return self.groq.ask(
                 query=query,
                 project_data=data,
                 context=f"""
 Computed Data:
-Base FSI: {fsi['base']}
-Fungible: {fsi['fungible']}
-Total FSI: {fsi['total']}
-BUA: {fsi['bua']}
+
+FSI:
+- Base: {fsi['base']}
+- Fungible: {fsi['fungible']}
+- Total: {fsi['total']}
+- BUA: {fsi['bua']}
 
 Parking:
-ECS: {parking['ecs']}
-Visitor: {parking['visitor']}
-Total: {parking['total']}
+- ECS: {parking['ecs']}
+- Visitor: {parking['visitor']}
+- Total: {parking['total']}
 
 Approvals:
 {chr(10).join(approvals)}
@@ -46,7 +47,7 @@ Approvals:
             )
 
         # -----------------------------------
-        # STRUCTURED RULES (SMART)
+        # RULES (structured + AI)
         # -----------------------------------
         if route == "rules":
 
@@ -55,24 +56,36 @@ Approvals:
                 project_data=data,
                 context="""
 Key 33(A)(10) Rules:
-- Base FSI ~3.0
-- Fungible up to 35%
-- TDR allowed with conditions
-- Parking governed by Table 8B
+
+- Base FSI approx 3.0
+- Fungible FSI up to 35%
+- TDR allowed subject to approval
+- Parking governed by Table 8B (ECS-based)
 """
             )
 
-       # -----------------------------------
-# RAG + AI (CORE INTELLIGENCE)
-# -----------------------------------
-docs = self.rag.search(query)
+        # -----------------------------------
+        # RAG (SEMANTIC SEARCH)
+        # -----------------------------------
+        docs = self.rag.search(query)
 
-# ✅ Fallback protection
-if not docs:
-    return self.groq.ask(
-        query=query,
-        project_data=data,
-        context="""
-No exact clause found in DCPR document.
+        # ✅ SAFETY: no result fallback
+        if not docs:
+            return self.groq.ask(
+                query=query,
+                project_data=data,
+                context="""
+No exact clause found in DCPR database.
 
-Answer
+Answer based on general UDCPR 33(A)(10) understanding.
+Clearly mention assumptions.
+"""
+            )
+
+        context = "\n\n".join(docs)
+
+        return self.groq.ask(
+            query=query,
+            project_data=data,
+            context=context
+        )
