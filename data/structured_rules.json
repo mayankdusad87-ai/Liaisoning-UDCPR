@@ -1,57 +1,32 @@
 {
-  "general_udcpr": {
-    "fsi": {
-      "residential": {
-        "9": 1.0,
-        "12": 1.2,
-        "18": 1.5,
-        "24": 1.75
+  "schemes": {
+    "33A10": {
+
+      "fsi": {
+        "base": 3.0,
+        "fungible_percent": 35,
+        "max_with_tdr": 4.0
       },
-      "commercial": {
-        "9": 1.2,
-        "12": 1.5,
-        "18": 1.8,
-        "24": 2.0
+
+      "parking": {
+        "type": "approximate",
+        "residential": {
+          "ecs_per_sqm": 0.013
+        }
       },
-      "industrial": {
-        "12": 1.0,
-        "18": 1.25,
-        "24": 1.5
+
+      "height_rules": {
+        "fire_noc": 24,
+        "high_rise": 45
+      },
+
+      "approvals": {
+        "fire": "Required above 24m",
+        "high_rise": "Required above 45m",
+        "environment": "Depends on BUA",
+        "airport": "Depends on location funnel"
       }
+
     }
-  },
-
-  "sra": {
-    "base_fsi": 3.0,
-    "fungible_percent": 35,
-    "tdr_allowed": true
-  },
-
-  "mhada": {
-    "base_fsi": 2.5,
-    "fungible_percent": 35,
-    "tdr_allowed": true
-  },
-
-  "pmay": {
-    "base_fsi": 2.0
-  },
-
-  "gaothan": {
-    "special_rules": true
-  },
-
-  "parking": {
-    "residential": "1 ECS per flat above 80 sqm",
-    "commercial": "1 ECS per 50 sqm BUA"
-  },
-
-  "amenity_space": {
-    "percent_of_plot": 10
-  },
-
-  "height_restrictions": {
-    "below_24m": "standard",
-    "above_24m": "fire NOC mandatory"
   }
 }
