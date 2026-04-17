@@ -3,7 +3,7 @@ import pdfplumber
 class RAGEngine:
 
     def __init__(self):
-        self.docs = self.load_docs("data/mumbai_dcpr.pdf")
+        self.docs = self.load_docs("data/MUBAI_DCPR.pdf")
 
     def load_docs(self, path):
         chunks = []
