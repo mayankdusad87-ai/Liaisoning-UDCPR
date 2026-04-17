@@ -8,18 +8,17 @@ class StructuredLookup:
         base = self.base_fsi
         fungible = base * (self.fungible_percent / 100)
 
-        total_fsi = base + fungible
-        bua = plot_area * total_fsi
+        total = base + fungible
+        bua = plot_area * total
 
         return {
             "base": base,
-            "fungible": fungible,
-            "total": total_fsi,
-            "bua": bua
+            "fungible": round(fungible, 2),
+            "total": round(total, 2),
+            "bua": round(bua, 2)
         }
 
     def parking(self, bua):
-        # simplified ECS logic
         ecs = bua / 100
         visitor = ecs * 0.05
 
@@ -35,6 +34,9 @@ class StructuredLookup:
         if height > 24:
             approvals.append("Fire NOC required")
 
-        approvals.append("Authority approval")
+        if height > 45:
+            approvals.append("High-rise compliance required")
+
+        approvals.append("Local authority approval")
 
         return approvals
