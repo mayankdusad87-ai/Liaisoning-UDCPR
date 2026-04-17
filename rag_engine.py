@@ -6,7 +6,10 @@ class RAGEngine:
 
     def __init__(self):
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
-        self.client = chromadb.Client()
+
+        # 🔥 persistent DB (important for Streamlit Cloud)
+        self.client = chromadb.PersistentClient(path="./vector_db")
+
         self.collection = self.client.get_or_create_collection("dcpr")
 
     def search(self, query, top_k=3):
@@ -19,10 +22,13 @@ class RAGEngine:
 
         docs = []
 
+        if not results["documents"]:
+            return []
+
         for doc, meta in zip(
             results["documents"][0],
             results["metadatas"][0]
         ):
-            docs.append(f"[Page {meta['page']}]\n{doc}")
+            docs.append(f"[Page {meta.get('page', 'NA')}]\n{doc}")
 
         return docs
