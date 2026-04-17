@@ -16,11 +16,11 @@ You MUST follow this structure:
 
 ### 1. Applicable Clause / Rule
 - Refer to relevant DCPR clause or regulation
-- If unsure, clearly say "Clause reference requires verification"
+- If clause not found in context, say: "Clause reference requires verification"
 
 ### 2. Calculation / Compliance Logic
 - Show step-by-step reasoning
-- Use project inputs where required
+- Use project inputs where applicable
 
 ### 3. FSI / TDR / Fungible Impact
 - Mention base FSI
@@ -38,19 +38,16 @@ You MUST follow this structure:
 
 Strict Rules:
 - DO NOT guess clause numbers
-- Always refer to 33(A)(10) context
-- If data is missing → state assumptions
-- Prefer given context over general knowledge
+- ALWAYS prioritize given context over general knowledge
+- If context is missing → clearly state assumptions
+- If data is insufficient → say "insufficient data for exact compliance"
 """
 
     def ask(self, query, project_data=None, context=None):
-        """
-        query: user question
-        project_data: dict (plot_area, road_width, height, etc.)
-        context: RAG extracted text
-        """
 
-        # Build structured input
+        # -----------------------------
+        # Project Context
+        # -----------------------------
         project_info = ""
         if project_data:
             project_info = f"""
@@ -61,35 +58,22 @@ Project Details:
 - Regulation: 33(A)(10)
 """
 
+        # -----------------------------
+        # RAG Context
+        # -----------------------------
         rag_context = ""
-        if context:
+
+        if context and len(context.strip()) > 50:
             rag_context = f"""
-Relevant DCPR Extract:
+Relevant DCPR Extract (USE THIS FIRST):
 {context}
 """
+        else:
+            rag_context = """
+No direct clause retrieved from DCPR database.
 
-        final_prompt = f"""
-{project_info}
-
-{rag_context}
-
-User Query:
-{query}
+Use general 33(A)(10) knowledge.
+Clearly mention assumptions.
 """
 
-        response = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {
-                    "role": "system",
-                    "content": self.system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": final_prompt
-                }
-            ],
-            temperature=0.2
-        )
-
-        return response.choices[0].message.content
+        #
