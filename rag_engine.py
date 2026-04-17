@@ -1,19 +1,28 @@
-import fitz
+from sentence_transformers import SentenceTransformer
+import chromadb
+
 
 class RAGEngine:
 
     def __init__(self):
-        self.pdf_path = "data/MUBAI-DCPR.pdf"
+        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.client = chromadb.Client()
+        self.collection = self.client.get_or_create_collection("dcpr")
 
-    def search(self, query):
-        doc = fitz.open(self.pdf_path)
+    def search(self, query, top_k=3):
+        query_embedding = self.model.encode([query]).tolist()
 
-        results = []
+        results = self.collection.query(
+            query_embeddings=query_embedding,
+            n_results=top_k
+        )
 
-        for i, page in enumerate(doc):
-            text = page.get_text()
+        docs = []
 
-            if query.lower() in text.lower():
-                results.append(f"[Page {i+1}]\n{text[:500]}")
+        for doc, meta in zip(
+            results["documents"][0],
+            results["metadatas"][0]
+        ):
+            docs.append(f"[Page {meta['page']}]\n{doc}")
 
-        return results[:3]
+        return docs
