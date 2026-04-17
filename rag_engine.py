@@ -1,34 +1,32 @@
 from sentence_transformers import SentenceTransformer
-import chromadb
+import fitz
 
 
 class RAGEngine:
 
     def __init__(self):
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.docs = self.load_docs("data/mumbai_dcpr.pdf")
 
-        # 🔥 persistent DB (important for Streamlit Cloud)
-        self.client = chromadb.PersistentClient(path="./vector_db")
+    def load_docs(self, path):
+        doc = fitz.open(path)
+        chunks = []
 
-        self.collection = self.client.get_or_create_collection("dcpr")
+        for i, page in enumerate(doc):
+            text = page.get_text()
+
+            for para in text.split("\n\n"):
+                if len(para.strip()) > 100:
+                    chunks.append({
+                        "text": para.strip(),
+                        "page": i + 1
+                    })
+
+        return chunks
 
     def search(self, query, top_k=3):
-        query_embedding = self.model.encode([query]).tolist()
+        query_emb = self.model.encode([query])[0]
 
-        results = self.collection.query(
-            query_embeddings=query_embedding,
-            n_results=top_k
-        )
+        scored = []
 
-        docs = []
-
-        if not results["documents"]:
-            return []
-
-        for doc, meta in zip(
-            results["documents"][0],
-            results["metadatas"][0]
-        ):
-            docs.append(f"[Page {meta.get('page', 'NA')}]\n{doc}")
-
-        return docs
+        for
