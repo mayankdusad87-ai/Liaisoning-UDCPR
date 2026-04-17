@@ -2,11 +2,14 @@ import fitz
 from sentence_transformers import SentenceTransformer
 import chromadb
 
+
 class PDFIngestion:
 
     def __init__(self):
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
-        self.client = chromadb.Client()
+
+        # persistent storage
+        self.client = chromadb.PersistentClient(path="./vector_db")
         self.collection = self.client.get_or_create_collection("dcpr")
 
     def ingest(self, pdf_path):
@@ -17,13 +20,19 @@ class PDFIngestion:
         for i, page in enumerate(doc):
             text = page.get_text()
 
-            # simple chunking
-            for para in text.split("\n\n"):
-                if len(para.strip()) > 100:
+            # better chunking
+            paragraphs = text.split("\n\n")
+
+            for para in paragraphs:
+                para = para.strip()
+
+                if len(para) > 120:
                     chunks.append({
-                        "text": para.strip(),
+                        "text": para,
                         "page": i + 1
                     })
+
+        print(f"Total chunks: {len(chunks)}")
 
         texts = [c["text"] for c in chunks]
         embeddings = self.model.encode(texts).tolist()
@@ -35,4 +44,4 @@ class PDFIngestion:
             ids=[f"id_{i}" for i in range(len(chunks))]
         )
 
-        print("✅ PDF Ingested Successfully")
+        print("✅ Ingestion Complete")
