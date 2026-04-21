@@ -1,19 +1,6 @@
-from query_router import QueryRouter
-from rule_engine import RuleEngine
-from groq_client import GroqClient
-from rag_engine import RAGEngine
+def process(self, query, data):
 
-
-class QueryDispatcher:
-
-    def __init__(self):
-        self.router = QueryRouter()
-        self.rules = RuleEngine()
-        self.groq = GroqClient()
-        self.rag = RAGEngine()
-
-    def process(self, query, data):
-
+    try:
         # -----------------------------------
         # SAFETY CHECK
         # -----------------------------------
@@ -21,30 +8,22 @@ class QueryDispatcher:
             return "Please enter a valid query."
 
         route = self.router.route(query)
+        print("ROUTE:", route)
 
         scheme = data.get("scheme", "33A10")
 
         # -----------------------------------
-        # CALCULATION ENGINE (CORE LOGIC)
+        # CALCULATION ENGINE
         # -----------------------------------
         if route == "calculation":
 
-            fsi = self.rules.calculate_fsi(
-                data["plot_area"],
-                scheme
-            )
+            fsi = self.rules.calculate_fsi(data["plot_area"], scheme)
 
-            parking = self.rules.calculate_parking(
-                fsi["bua"],
-                scheme
-            )
+            parking = self.rules.calculate_parking(fsi["bua"], scheme)
 
-            approvals = self.rules.check_approvals(
-                data["height"],
-                scheme
-            )
+            approvals = self.rules.check_approvals(data["height"], scheme)
 
-            return self.groq.ask(
+            response = self.groq.ask(
                 query=query,
                 project_data=data,
                 context=f"""
@@ -66,28 +45,25 @@ Approvals Required:
 """
             )
 
+            return response if response else "No response generated."
+
         # -----------------------------------
         # RAG + CLAUSE INTELLIGENCE
         # -----------------------------------
         docs = self.rag.search(query)
 
-        # fallback if no docs
-        if not docs:
-            return self.groq.ask(
-                query=query,
-                project_data=data,
-                context="""
-No exact clause found in DCPR extract.
+        context = "\n\n".join(docs) if docs else ""
 
-Answer based on general Regulation 33(A)(10) understanding.
-Clearly mention assumptions.
-"""
-            )
-
-        context = "\n\n".join(docs)
-
-        return self.groq.ask(
+        response = self.groq.ask(
             query=query,
             project_data=data,
-            context=context
+            context=context if context else """
+No exact clause found in DCPR extract.
+Answer based on general Regulation 33(A)(10) understanding.
+"""
         )
+
+        return response if response else "No response generated."
+
+    except Exception as e:
+        return f"Error occurred: {str(e)}"
