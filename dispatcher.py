@@ -1,4 +1,6 @@
 def process(self, query, data):
+    print("DEBUG → QUERY:", query)
+    print("DEBUG → DATA:", data)
 
     try:
         # -----------------------------------
