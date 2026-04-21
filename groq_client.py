@@ -115,4 +115,7 @@ User Query:
             temperature=0.2
         )
 
-        return response.choices[0].message.content
+        if response and response.choices:
+            return response.choices[0].message.content
+
+        return "No response generated from AI."
